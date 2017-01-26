@@ -1,0 +1,21 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use v5.10;
+
+my $file = $ARGV[0] or die "$0 must specify a file";
+
+use Parse::Crontab;
+use ParseCron;
+
+my $translator = ParseCron->new;
+my $crontab = Parse::Crontab->new(file => $file);
+
+die "Can't interpret the crontab file: " . $crontab->error_messages if (not $crontab->is_valid);
+
+for my $job ($crontab->jobs) {
+  say "Job: ", $translator->parse_cron(join ' ', map { $job->$_->entity } qw/minute hour day month day_of_week/);
+  say $job->command;
+}
+
