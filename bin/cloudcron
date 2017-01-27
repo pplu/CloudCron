@@ -6,6 +6,8 @@ use v5.10;
 
 my $file = $ARGV[0] or die "$0 must specify a file";
 
+
+use Cfn;
 use Parse::Crontab;
 use ParseCron;
 
@@ -14,8 +16,27 @@ my $crontab = Parse::Crontab->new(file => $file);
 
 die "Can't interpret the crontab file: " . $crontab->error_messages if (not $crontab->is_valid);
 
+my $cfn = Cfn->new;
+
+my $line = 1;
 for my $job ($crontab->jobs) {
-  say "Job: ", $translator->parse_cron(join ' ', map { $job->$_->entity } qw/minute hour day month day_of_week/);
-  say $job->command;
+  my $event_pattern = join ' ', map { $job->$_->entity } qw/minute hour day month day_of_week/;
+
+  $cfn->addResource("Line$line", 'AWS::Events::Rule', 
+    Description => $job->command,
+    #EventPattern => $event_pattern,
+    #RoleArn => ...
+    ScheduleExpression => "cron($event_pattern)",
+    State => 'ENABLED',
+    Targets => [
+      { Arn => '', Id => "Line${line}Target1", Input => '', InputPath => '{"command":[],"type":"shell"}' },
+    ],
+  );
+
+  say ' - ', $translator->parse_cron(join ' ', map { $job->$_->entity } qw/minute hour day month day_of_week/), ' ---> ', $job->command;
+  $line ++;
 }
 
+my $hr = $cfn->as_hashref;
+use Data::Dumper;
+print Dumper($hr);
