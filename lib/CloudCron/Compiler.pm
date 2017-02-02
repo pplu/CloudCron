@@ -31,6 +31,11 @@ sub rules {
     #return map { $self->_as_rule($_); } @{$self->parser->jobs};
 }
 
+sub envs {
+    my $self = shift;
+    return grep { $_->isa('Parse::Crontab::Entry::Env') } $self->parser->entries;
+}
+
 sub _as_rule {
     my $self = shift;
     my $job = shift;

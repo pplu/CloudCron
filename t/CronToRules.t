@@ -67,6 +67,19 @@ describe "Compiler" => sub {
         ok($rule->isa('Cfn::Resource::AWS::Events::Rule'));
     };
 
+    it "can parse environment variables also" => sub {
+        my $compiler = CloudCron::Compiler->new({
+            content =>
+'PATH=/my/path
+# comment line
+0 23 * * * bash -c datetime',
+});
+        my @envs = $compiler->envs;
+        my $env = $envs[0];
+        ok($env->isa('Parse::Crontab::Entry::Env') &&
+           $env->key eq 'PATH' && $env->value eq '/my/path');
+    };
+
 };
 
 runtests unless caller;
