@@ -2,7 +2,7 @@ package CloudCron::Compiler;
 use Moose;
 use namespace::autoclean;
 
-use Parse::Crontab;
+use CloudCron::Parser;
 use Cfn;
 use Cfn::Resource::AWS::Events::Rule;
 use Cfn::Resource::Properties::AWS::Events::Rule;
@@ -14,12 +14,12 @@ has content => (is => 'ro', isa => 'Str', lazy => 1, default => sub {
     croak 'Attribute file or content is required!' unless defined $self->file;
     Path::Class::file($self->file)->slurp;
 });
-has parser => (is => 'ro', isa => 'Parse::Crontab', lazy => 1, builder => '_parser');
+has parser => (is => 'ro', isa => 'CloudCron::Parser', lazy => 1, builder => '_parser');
 has file => (is => 'ro');
 
 sub _parser {
     my $self = shift;
-    return Parse::Crontab->new({ content => $self->content });
+    return CloudCron::Parser->new({ content => $self->content });
 }
 
 sub rules {
@@ -28,12 +28,11 @@ sub rules {
     die "Invalid crontab specification" if !$self->parser->is_valid;
     my @jobs = $self->parser->jobs;
     return map { $self->_as_rule($_); } @jobs;
-    #return map { $self->_as_rule($_); } @{$self->parser->jobs};
 }
 
 sub envs {
     my $self = shift;
-    return grep { $_->isa('Parse::Crontab::Entry::Env') } $self->parser->entries;
+    return $self->parser->envs;
 }
 
 sub _as_rule {
@@ -51,6 +50,12 @@ sub _cron {
 }
 
 sub _get_properties {
+    # Description no-req
+    # EventPattern dont specify, specify schedule expresion instead
+    # Name rule name, if not aws will specify a unique one
+    # RoleArn no-req ?
+    # ScheduleExpression req (cron) # support rate?
+    # State no-req 'ENABLED'
     my $self = shift;
     my $job = shift;
     my $cron = $self->_cron($job);
