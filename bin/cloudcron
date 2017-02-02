@@ -5,15 +5,20 @@ use v5.10;
 
 use Cfn;
 use CloudCron::Compiler;
+use CloudCron::TargetQueue;
 
 my $file = $ARGV[0] or die "$0 must specify a file";
+my $target = CloudCron::TargetQueue->new({
+    Arn => 'Arn',
+    Id  => 'Id',
+});
 
 my $cfn = Cfn->new;
 my $line = 1;
-my $compiler = CloudCron::Compiler->new({ file => $file });
+my $compiler = CloudCron::Compiler->new({ file => $file, target => $target });
 for my $rule ($compiler->rules) {
     $cfn->addResource("Line$line", $rule);
-    print "Adding " . $rule . " to cloudfront\n";
+    #print "Adding " . $rule . " to cloudfront\n";
     $line++;
 }
 my $hr = $cfn->as_hashref;

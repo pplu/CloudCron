@@ -9,13 +9,14 @@ use Cfn::Resource::Properties::AWS::Events::Rule;
 use Path::Class;
 use Carp;
 
+has target  => (is => 'ro', isa => 'CloudCron::TargetQueue', required => 1);
 has content => (is => 'ro', isa => 'Str', lazy => 1, default => sub {
     my $self = shift;
     croak 'Attribute file or content is required!' unless defined $self->file;
     Path::Class::file($self->file)->slurp;
 });
-has parser => (is => 'ro', isa => 'CloudCron::Parser', lazy => 1, builder => '_parser');
-has file => (is => 'ro');
+has parser  => (is => 'ro', isa => 'CloudCron::Parser', lazy => 1, builder => '_parser');
+has file    => (is => 'ro');
 
 sub _parser {
     my $self = shift;
@@ -50,9 +51,15 @@ sub _cron {
 }
 
 sub _command {
-    my ($self, $cmd, @envs) = @_;
+    my ($self, $job, @envs) = @_;
     my $envs = join(' ', map { $_->key . '=' . $_->value } @envs);
-    return $envs . ' ' . $cmd;
+    return $envs . ' ' . $job->command;
+}
+
+sub _name {
+    my ($self, $job) = @_;
+    my @parts = split /\//, $job->command;
+    return $parts[$#parts];
 }
 
 sub _get_properties {
@@ -65,11 +72,12 @@ sub _get_properties {
     my $self = shift;
     my $job = shift;
     my $cron = $self->_cron($job);
-    my $cmd = $self->_command($job->command, $self->envs);
+    my $cmd = $self->_command($job, $self->envs);
+    my $name = $self->_name($job);
     return Cfn::Resource::Properties::AWS::Events::Rule->new({
         Description => $job->command,
         #EventPattern => ,
-        Name => $job->command,
+        Name => $name,
         #RoleArn => ,
         ScheduleExpression => "cron($cron)",
         State => 'ENABLED',
@@ -77,7 +85,7 @@ sub _get_properties {
             {
                 Arn => '',
                 Id => "LineXXXTarget1",
-                Input => '{"command":["'. $cmd . '"],"type":"shell"}', # passed to the target, if not informed CWE passes the entire Event
+                Input => '{"command":["'. $cmd . '"], "type":"shell"}', # passed to the target, if not informed CWE passes the entire Event
                 InputPath => '', # path of the event passed to the target
             },
         ],

@@ -10,5 +10,5 @@ sub envs {
     return grep { $_->isa('Parse::Crontab::Entry::Env') } $self->entries;
 }
 
-__PACKAGE__->meta->make_immutable;
+__PACKAGE__->meta->make_immutable( inline_constructor => 0 );
 1;
