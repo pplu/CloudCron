@@ -30,6 +30,13 @@ package CloudCron::Args {
         isa => 'Str',
         required => 1,
         documentation => 'The user-defined unique id of the target queue.');
+
+    has prefix => (
+        is => 'ro',
+        isa => 'Str',
+        required => 0,
+        default => sub { 'crontab-line-' },
+        documentation => 'Prefix to the resource number.');
     1;
 }
 
@@ -44,7 +51,7 @@ my $target = CloudCron::TargetQueue->new({
 my $cfn = Cfn->new;
 my $compiler = CloudCron::Compiler->new({ file => $file, target => $target });
 for my $linerule ($compiler->rules) {
-    my $name = "cron-line-" . $linerule->line;
+    my $name = $opts->prefix . $linerule->line;
     $cfn->addResource($name, $linerule->rule);
 }
 my $hr = $cfn->as_hashref;
