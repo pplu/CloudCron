@@ -1,42 +1,25 @@
 #!/usr/bin/env perl
-
 use strict;
 use warnings;
 use v5.10;
 
+use Cfn;
+use CloudCron::Compiler;
+
 my $file = $ARGV[0] or die "$0 must specify a file";
 
-
-use Cfn;
-use Parse::Crontab;
-use ParseCron;
-
-my $translator = ParseCron->new;
-my $crontab = Parse::Crontab->new(file => $file);
-
-die "Can't interpret the crontab file: " . $crontab->error_messages if (not $crontab->is_valid);
-
 my $cfn = Cfn->new;
-
 my $line = 1;
-for my $job ($crontab->jobs) {
-  my $event_pattern = join ' ', map { $job->$_->entity } qw/minute hour day month day_of_week/;
-
-  $cfn->addResource("Line$line", 'AWS::Events::Rule', 
-    Description => $job->command,
-    #EventPattern => $event_pattern,
-    #RoleArn => ...
-    ScheduleExpression => "cron($event_pattern)",
-    State => 'ENABLED',
-    Targets => [
-      { Arn => '', Id => "Line${line}Target1", Input => '', InputPath => '{"command":[],"type":"shell"}' },
-    ],
-  );
-
-  say ' - ', $translator->parse_cron(join ' ', map { $job->$_->entity } qw/minute hour day month day_of_week/), ' ---> ', $job->command;
-  $line ++;
+my $compiler = CloudCron::Compiler->new({ file => $file });
+for my $rule ($compiler->rules) {
+    $cfn->addResource("Line$line", $rule);
+    print "Adding " . $rule . " to cloudfront\n";
+    $line++;
 }
-
 my $hr = $cfn->as_hashref;
+print "\n";
+print "\n";
+print "\n";
+
 use Data::Dumper;
 print Dumper($hr);
