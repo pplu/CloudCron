@@ -49,6 +49,12 @@ sub _cron {
     return join ' ', map { $job->$_->entity } qw/minute hour day month day_of_week/;
 }
 
+sub _command {
+    my ($self, $cmd, @envs) = @_;
+    my $envs = join(' ', map { $_->key . '=' . $_->value } @envs);
+    return $envs . ' ' . $cmd;
+}
+
 sub _get_properties {
     # Description no-req
     # EventPattern dont specify, specify schedule expresion instead
@@ -59,6 +65,7 @@ sub _get_properties {
     my $self = shift;
     my $job = shift;
     my $cron = $self->_cron($job);
+    my $cmd = $self->_command($job->command, $self->envs);
     return Cfn::Resource::Properties::AWS::Events::Rule->new({
         Description => $job->command,
         #EventPattern => ,
@@ -67,7 +74,12 @@ sub _get_properties {
         ScheduleExpression => "cron($cron)",
         State => 'ENABLED',
         Targets => [
-            { Arn => '', Id => "LineXXXTarget1", Input => '', InputPath => '{"command":[],"type":"shell"}' },
+            {
+                Arn => '',
+                Id => "LineXXXTarget1",
+                Input => '{"command":["'. $cmd . '"],"type":"shell"}', # passed to the target, if not informed CWE passes the entire Event
+                InputPath => '', # path of the event passed to the target
+            },
         ],
     });
 }
