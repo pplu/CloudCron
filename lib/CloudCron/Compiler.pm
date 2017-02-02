@@ -3,11 +3,13 @@ use Moose;
 use namespace::autoclean;
 
 use CloudCron::Parser;
+use CloudCron::TargetInput;
 use Cfn;
 use Cfn::Resource::AWS::Events::Rule;
 use Cfn::Resource::Properties::AWS::Events::Rule;
 use Path::Class;
 use Carp;
+use ParseCron;
 
 has target  => (is => 'ro', isa => 'CloudCron::TargetQueue', required => 1);
 has content => (is => 'ro', isa => 'Str', lazy => 1, default => sub {
@@ -17,6 +19,12 @@ has content => (is => 'ro', isa => 'Str', lazy => 1, default => sub {
 });
 has parser  => (is => 'ro', isa => 'CloudCron::Parser', lazy => 1, builder => '_parser');
 has file    => (is => 'ro');
+has translator => (is => 'ro', isa => 'ParseCron', lazy => 1, builder => '_translator');
+
+sub _translator {
+    my $self;
+    return ParseCron->new;
+}
 
 sub _parser {
     my $self = shift;
@@ -50,43 +58,45 @@ sub _cron {
     return join ' ', map { $job->$_->entity } qw/minute hour day month day_of_week/;
 }
 
-sub _command {
-    my ($self, $job, @envs) = @_;
-    my $envs = join(' ', map { $_->key . '=' . $_->value } @envs);
-    return $envs . ' ' . $job->command;
-}
-
 sub _name {
     my ($self, $job) = @_;
     my @parts = split /\//, $job->command;
     return $parts[$#parts];
 }
 
+sub _input {
+    my ($self, $job, @envars) = @_;
+    my @aux = map { ($_->key, $_->value) } @envars;
+    my %envs_hash = @aux;
+    return CloudCron::TargetInput->new({
+        command => $job->command,
+        env => \%envs_hash,
+    });
+}
+
+sub _description { # name.  human cron schedule
+    my ($self, $job) = @_;
+    my $name = $self->_name($job);
+    my $human = $self->translator->parse_cron(join ' ', map { $job->$_->entity } qw/minute hour day month day_of_week/);
+    return $name . " " . $human;
+}
+
 sub _get_properties {
-    # Description no-req
-    # EventPattern dont specify, specify schedule expresion instead
-    # Name rule name, if not aws will specify a unique one
-    # RoleArn no-req ?
-    # ScheduleExpression req (cron) # support rate?
-    # State no-req 'ENABLED'
     my $self = shift;
     my $job = shift;
     my $cron = $self->_cron($job);
-    my $cmd = $self->_command($job, $self->envs);
     my $name = $self->_name($job);
+    my $description = $self->_description($job);
+    my $input = $self->_input($job, $self->envs);
     return Cfn::Resource::Properties::AWS::Events::Rule->new({
-        Description => $job->command,
-        #EventPattern => ,
-        Name => $name,
-        #RoleArn => ,
+        Description => $description,
         ScheduleExpression => "cron($cron)",
         State => 'ENABLED',
         Targets => [
             {
-                Arn => '',
-                Id => "LineXXXTarget1",
-                Input => '{"command":["'. $cmd . '"], "type":"shell"}', # passed to the target, if not informed CWE passes the entire Event
-                InputPath => '', # path of the event passed to the target
+                Arn   => $self->target->Arn,
+                Id    => $self->target->Id,
+                Input => $input->json,
             },
         ],
     });
