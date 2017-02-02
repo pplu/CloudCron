@@ -7,11 +7,38 @@ use Cfn;
 use CloudCron::Compiler;
 use CloudCron::TargetQueue;
 use JSON;
+use Getopt::Long;
 
-my $file = $ARGV[0] or die "$0 must specify a file";
+package CloudCron::Args {
+    use Moose;
+    with 'MooseX::Getopt';
+
+    has file => (
+        is => 'ro',
+        isa => 'Str',
+        required => 1,
+        documentation => 'The crontab file to parse and convert to infrastructure.');
+
+    has arn => (
+        is => 'ro',
+        isa => 'Str',
+        required => 1,
+        documentation => 'The Amazon Resource Name (ARN) of the target queue.');
+
+    has id => (
+        is => 'ro',
+        isa => 'Str',
+        required => 1,
+        documentation => 'The user-defined unique id of the target queue.');
+    1;
+}
+
+my $opts = CloudCron::Args->new_with_options;
+
+my $file = $opts->file;
 my $target = CloudCron::TargetQueue->new({
-    Arn => 'Arn',
-    Id  => 'Id',
+    Arn => $opts->arn,
+    Id  => $opts->id,
 });
 
 my $cfn = Cfn->new;
