@@ -6,6 +6,7 @@ use v5.10;
 use Cfn;
 use CloudCron::Compiler;
 use CloudCron::TargetQueue;
+use JSON;
 
 my $file = $ARGV[0] or die "$0 must specify a file";
 my $target = CloudCron::TargetQueue->new({
@@ -20,9 +21,5 @@ for my $linerule ($compiler->rules) {
     $cfn->addResource($name, $linerule->rule);
 }
 my $hr = $cfn->as_hashref;
-print "\n";
-print "\n";
-print "\n";
 
-use Data::Dumper;
-print Dumper($hr);
+print encode_json($hr);
