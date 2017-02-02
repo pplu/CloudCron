@@ -69,14 +69,24 @@ describe "Compiler" => sub {
         is(scalar @rules, 2);
     };
 
-    it "will give you an instance of a Rule" => sub {
+    it "will give you an instance of CroneLineRule" => sub {
         my $compiler = CloudCron::Compiler->new({
             target => $target,
             content => '0 23 * * * bash -c datetime',
                                                 });
         my @rules = $compiler->rules;
         my $rule = $rules[0];
-        ok($rule->isa('Cfn::Resource::AWS::Events::Rule'));
+        ok($rule->isa('CloudCron::CronLineRule'));
+    };
+
+    it "will give you access to an instance of a Rule" => sub {
+        my $compiler = CloudCron::Compiler->new({
+            target => $target,
+            content => '0 23 * * * bash -c datetime',
+                                                });
+        my @rules = $compiler->rules;
+        my $rule = $rules[0];
+        ok($rule->rule->isa('Cfn::Resource::AWS::Events::Rule'));
     };
 
     it "can parse environment variables also" => sub {

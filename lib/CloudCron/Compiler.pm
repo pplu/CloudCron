@@ -4,6 +4,7 @@ use namespace::autoclean;
 
 use CloudCron::Parser;
 use CloudCron::TargetInput;
+use CloudCron::CronLineRule;
 use Cfn;
 use Cfn::Resource::AWS::Events::Rule;
 use Cfn::Resource::Properties::AWS::Events::Rule;
@@ -36,7 +37,15 @@ sub rules {
 
     die "Invalid crontab specification" if !$self->parser->is_valid;
     my @jobs = $self->parser->jobs;
-    return map { $self->_as_rule($_); } @jobs;
+    return map { $self->_as_line_rule($_); } @jobs;
+}
+
+sub _as_line_rule {
+    my ($self, $job) = @_;
+    return CloudCron::CronLineRule->new({
+        line => $job->line_number,
+        rule => $self->_as_rule($job),
+    });
 }
 
 sub envs {
@@ -45,8 +54,7 @@ sub envs {
 }
 
 sub _as_rule {
-    my $self = shift;
-    my $job = shift;
+    my ($self, $job) = @_;
     return Cfn::Resource::AWS::Events::Rule->new({
         Properties => $self->_get_properties($job),
     });

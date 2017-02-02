@@ -14,12 +14,10 @@ my $target = CloudCron::TargetQueue->new({
 });
 
 my $cfn = Cfn->new;
-my $line = 1;
 my $compiler = CloudCron::Compiler->new({ file => $file, target => $target });
-for my $rule ($compiler->rules) {
-    $cfn->addResource("Line$line", $rule);
-    #print "Adding " . $rule . " to cloudfront\n";
-    $line++;
+for my $linerule ($compiler->rules) {
+    my $name = "cron-line-" . $linerule->line;
+    $cfn->addResource($name, $linerule->rule);
 }
 my $hr = $cfn->as_hashref;
 print "\n";
