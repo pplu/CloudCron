@@ -1,42 +1,59 @@
 #!/usr/bin/env perl
-
 use strict;
 use warnings;
 use v5.10;
 
-my $file = $ARGV[0] or die "$0 must specify a file";
-
-
 use Cfn;
-use Parse::Crontab;
-use ParseCron;
+use CloudCron::Compiler;
+use CloudCron::TargetQueue;
+use JSON;
+use Getopt::Long;
 
-my $translator = ParseCron->new;
-my $crontab = Parse::Crontab->new(file => $file);
+package CloudCron::Args {
+    use Moose;
+    with 'MooseX::Getopt';
 
-die "Can't interpret the crontab file: " . $crontab->error_messages if (not $crontab->is_valid);
+    has file => (
+        is => 'ro',
+        isa => 'Str',
+        required => 1,
+        documentation => 'The crontab file to parse and convert to infrastructure.');
 
-my $cfn = Cfn->new;
+    has arn => (
+        is => 'ro',
+        isa => 'Str',
+        required => 1,
+        documentation => 'The Amazon Resource Name (ARN) of the target queue.');
 
-my $line = 1;
-for my $job ($crontab->jobs) {
-  my $event_pattern = join ' ', map { $job->$_->entity } qw/minute hour day month day_of_week/;
+    has id => (
+        is => 'ro',
+        isa => 'Str',
+        required => 1,
+        documentation => 'The user-defined unique id of the target queue.');
 
-  $cfn->addResource("Line$line", 'AWS::Events::Rule', 
-    Description => $job->command,
-    #EventPattern => $event_pattern,
-    #RoleArn => ...
-    ScheduleExpression => "cron($event_pattern)",
-    State => 'ENABLED',
-    Targets => [
-      { Arn => '', Id => "Line${line}Target1", Input => '', InputPath => '{"command":[],"type":"shell"}' },
-    ],
-  );
-
-  say ' - ', $translator->parse_cron(join ' ', map { $job->$_->entity } qw/minute hour day month day_of_week/), ' ---> ', $job->command;
-  $line ++;
+    has prefix => (
+        is => 'ro',
+        isa => 'Str',
+        required => 0,
+        default => sub { 'crontab-line-' },
+        documentation => 'Prefix to the resource number.');
+    1;
 }
 
+my $opts = CloudCron::Args->new_with_options;
+
+my $file = $opts->file;
+my $target = CloudCron::TargetQueue->new({
+    Arn => $opts->arn,
+    Id  => $opts->id,
+});
+
+my $cfn = Cfn->new;
+my $compiler = CloudCron::Compiler->new({ file => $file, target => $target });
+for my $linerule ($compiler->rules) {
+    my $name = $opts->prefix . $linerule->line;
+    $cfn->addResource($name, $linerule->rule);
+}
 my $hr = $cfn->as_hashref;
-use Data::Dumper;
-print Dumper($hr);
+
+print encode_json($hr);
