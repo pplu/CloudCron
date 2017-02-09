@@ -4,6 +4,7 @@ requires 'CloudDeploy';
 requires 'Moose';
 requires 'JSON';
 requires 'MooseX::Getopt';
+requires 'SQS::Worker';
 
 on 'develop' => sub {
   requires 'Test::Spec';
