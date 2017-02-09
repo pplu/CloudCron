@@ -18,4 +18,4 @@ help: ##@other Show this help.
 	@perl -e '$(HELP_FUN)' $(MAKEFILE_LIST)
 
 test-single: ## run test over $testfile
-	carton exec perl -I local -I lib ${testfile}
+	carton exec perl -I local -I lib -I t/lib ${testfile}
