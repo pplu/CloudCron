@@ -16,14 +16,15 @@ package CloudCronSQSQueueArgs {
     is => 'ro', 
     isa => 'Int', 
     traits => ['StackParameter'], 
-    required => 1,  
+      required => 1,
+      default => 1,
     documentation => 'Num of receives before redriving the msg to the dead letter queue'
   );
-}
+};
 
 
 
-package CloudCronSQSQueue {
+package CloudCron::AWS::Queue {
   use Moose;
   use CCfnX::Shortcuts;
   extends 'CCfn';
@@ -50,5 +51,6 @@ package CloudCronSQSQueue {
   output 'cloudcronqueue/sqs'              => Ref('CloudCronQueue');
   output 'cloudcrondeadletterqueue/sqsarn' => GetAtt('CloudCronDeadLetterQueue', 'Arn');
   output 'cloudcrondeadletterqueue/sqs'    => Ref('CloudCronDeadLetterQueue');
-}
+};
 
+1;
