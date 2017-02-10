@@ -11,4 +11,5 @@ on 'develop' => sub {
   requires 'Test::Spec';
   requires 'Test::Perl::Critic';
   requires 'Data::Dumper';
+  requires 'Test::Output';
 };
