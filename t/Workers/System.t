@@ -5,7 +5,7 @@ use CloudCron::TargetInput;
 use CloudCron::Compiler;
 use Data::Dumper;
 use JSON;
-#use Mocks;
+use Test::Output;
 
 my $DO_LOG = 1;
 sub mk_log {
@@ -27,16 +27,16 @@ describe "CloudCron::Workers::System" => sub {
     my $msg = "{\"env\":{\"HOME\":\"/opt/deploy/code/portal/\",\"BASH_ENV\":\"/etc/default/portal\",\"PERL5LIB\":\"/opt/deploy/code/portal/local/lib/perl5/\",\"PATH\":\"/opt/capside/perl-5.16.3/bin/:usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games\"},\"type\":\"shell\",\"command\":\"bash -c /opt/deploy/code/portal/script/timeworked_reports\"}";
 
     $msg = encode_json({
-        env => { PAU => 'pau' },
+        env => { NAME => 'john', LAST => 'doe' },
         type => "shell",
-        command => 'ls -lah',
+        command => 'echo $NAME-$LAST-NAME-$NAME-$LAST',
     });
 
     my $log_stub = stub(
         error => mk_log('error'),
         warn  => mk_log('wanr'),
         info  => mk_noop, #mk_log('info'),
-        debug => mk_log('debug'),
+        debug => mk_noop, #mk_log('debug'),
     );
 
     my $msg_stub = stub(
@@ -100,9 +100,10 @@ describe "CloudCron::Workers::System" => sub {
         ok($expectation->verify);
     };
 
-    it "executes without failing" => sub {
-        $worker->fetch_message;
+    it "executes shell command end expands envs" => sub {
+        stdout_like { $worker->fetch_message } qr/john-doe-NAME-john-doe/;
     };
+
 
 };
 

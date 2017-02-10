@@ -40,16 +40,15 @@ sub _log_command {
         "Executed command",
         "  type: $message->{ type }",
         "  cmd: $message->{ command }",
-        "  envs: " . Dumper($message->{ env })
+        #"  envs: " . Dumper($message->{ env })
         );
 }
 
 sub execute {
     my ($self, $env_ref, $cmd) = @_;
     my %env = %$env_ref;
-    $self->log->error("ref env: " . Dumper(%env));
     foreach my $var (keys %env) {
-        $self->log->debug("setting $var -> $env{ $var }");
+        #$self->log->debug("setting $var -> $env{ $var }");
         $ENV{$var} = $env{$var};
     }
     eval {
