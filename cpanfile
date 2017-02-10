@@ -5,6 +5,7 @@ requires 'Moose';
 requires 'JSON';
 requires 'MooseX::Getopt';
 requires 'SQS::Worker';
+requires 'MooseX::App';
 
 on 'develop' => sub {
   requires 'Test::Spec';
