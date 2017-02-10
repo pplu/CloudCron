@@ -19,3 +19,6 @@ help: ##@other Show this help.
 
 test-single: ## run test over $testfile
 	carton exec perl -I local -I lib -I t/lib ${testfile}
+
+tidy: ## run perltidy on $tidyfile
+	carton exec perl -I local -I lib ./local/bin/perltidy ${tidyfile}
