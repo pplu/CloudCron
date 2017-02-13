@@ -51,7 +51,7 @@ sub run {
   my $cfn = Cfn->new;
   my $compiler = CloudCron::Compiler->new({
     file   => $self->file,
-    target => $self->target
+    target => $target
   });
   
   for my $rule ($compiler->rules) {
@@ -59,9 +59,7 @@ sub run {
     $cfn->addResource($name, $rule->rule);
   }
 
-  my $hr => $cfn->as_hashref;
-
-  print encode_json $hr;
+  print encode_json($cfn->as_hashref);
 }
 
 1;
