@@ -6,6 +6,7 @@ requires 'JSON';
 requires 'MooseX::Getopt';
 requires 'SQS::Worker';
 requires 'MooseX::App';
+requires 'Log::Log4perl';
 
 on 'develop' => sub {
   requires 'Test::Spec';

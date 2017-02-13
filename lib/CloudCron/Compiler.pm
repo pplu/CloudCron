@@ -98,7 +98,7 @@ sub _get_properties {
     my $input = $self->_input($job, $self->envs);
     return Cfn::Resource::Properties::AWS::Events::Rule->new({
         Description => $description,
-        ScheduleExpression => "cron($cron)",
+        ScheduleExpression => "cron($cron *)",
         State => 'ENABLED',
         Targets => [
             {
