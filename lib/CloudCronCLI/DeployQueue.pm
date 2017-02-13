@@ -1,9 +1,9 @@
 package CloudCronCLI::DeployQueue;
 use MooseX::App::Command;
 
-command_short_description q(This is the short description for deployqueue); 
-command_long_description q(This is the long description for deployqueue); 
-command_usage q(cloudcron deployqueue);
+command_short_description q(Deploy a queue in AWS with specified name and region); 
+command_long_description q(Deploy a queue in AWS with specified name and region); 
+command_usage q(cloudcron deploy_queue);
 
 option name => (
   is => 'ro',
