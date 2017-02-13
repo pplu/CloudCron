@@ -35,6 +35,8 @@ package CloudCron::AWS::Queue {
     default => sub { CloudCronSQSQueueArgs->new_with_options()  },
   );
 
+  stack_version 1;
+
   resource CloudCronDeadLetterQueue => 'AWS::SQS::Queue', {
     MessageRetentionPeriod => 1209600,  # 14 days (it's the maximum value)          
   };
