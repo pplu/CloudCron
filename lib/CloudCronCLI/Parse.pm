@@ -28,7 +28,12 @@ option arn => (
 option id => (
   is => 'ro',
   isa => 'Str',
-  required => 1,
+  required => 0,
+  default => sub {
+    my $self = shift;
+    my $arn = $self->arn || '';
+    return 'Id-' . $arn;
+  },
   documentation => 'The user-defined unique id of the target queue.',
 );
 
@@ -53,7 +58,7 @@ sub run {
     file   => $self->file,
     target => $target
   });
-  
+
   for my $rule ($compiler->rules) {
     my $name = $self->prefix . $rule->line;
     $cfn->addResource($name, $rule->rule);
