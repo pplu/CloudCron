@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Built with MooseX::App::Plugin::BashCompletion::Command on 2017/02/10
+# Built with MooseX::App::Plugin::BashCompletion::Command on 2017/02/13
 
-cloudcron_COMMANDS='help parse'
+cloudcron_COMMANDS='help deploy_queue parse'
 
 _cloudcron_macc_help() {
     if [ $COMP_CWORD = 2 ]; then
@@ -12,8 +12,12 @@ _cloudcron_macc_help() {
     fi
 }
 
+_cloudcron_macc_deploy_queue() {
+    _cloudcron_compreply "--help -h --usage -?"
+}
+
 _cloudcron_macc_parse() {
-    _cloudcron_compreply "--file -f --help -h --usage -?"
+    _cloudcron_compreply "--file --arn --id --prefix --help -h --usage -?"
 }
 
 _cloudcron_compreply() {
