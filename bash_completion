@@ -2,7 +2,7 @@
 
 # Built with MooseX::App::Plugin::BashCompletion::Command on 2017/02/13
 
-cloudcron_COMMANDS='help deploy_queue parse'
+cloudcron_COMMANDS='help delete_queue deploy_queue parse update_queue'
 
 _cloudcron_macc_help() {
     if [ $COMP_CWORD = 2 ]; then
@@ -12,12 +12,20 @@ _cloudcron_macc_help() {
     fi
 }
 
+_cloudcron_macc_delete_queue() {
+    _cloudcron_compreply "--name --help -h --usage -?"
+}
+
 _cloudcron_macc_deploy_queue() {
-    _cloudcron_compreply "--help -h --usage -?"
+    _cloudcron_compreply "--name --region --help -h --usage -?"
 }
 
 _cloudcron_macc_parse() {
     _cloudcron_compreply "--file --arn --id --prefix --help -h --usage -?"
+}
+
+_cloudcron_macc_update_queue() {
+    _cloudcron_compreply "--name --help -h --usage -?"
 }
 
 _cloudcron_compreply() {
