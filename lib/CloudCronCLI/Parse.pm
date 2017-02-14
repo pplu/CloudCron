@@ -9,7 +9,7 @@ use JSON;
 
 command_short_description q(Parse a crontab file into CloudWatchEvents);
 command_long_description q(Parse a crontab file into CloudWatchEvents);
-command_usage q(cloudcron parse --file FILENAME --arn ARN --id ID [--prefix prefix]);
+command_usage q(cloudcron parse --file FILENAME --sqs_arn SQS_ARN --sqs_name SQS_NAME [--prefix prefix]);
 
 option file => (
   is => 'ro',
@@ -32,23 +32,26 @@ option region => (
     required => 1,
     documentation => 'AWS region');
 
-option arn => (
+option sqs_arn => (
   is => 'ro',
   isa => 'Str',
   required => 1,
   documentation => 'The Amazon Resource Name (ARN) of the queue.',
 );
 
-option id => (
+option sqs_name => (
   is => 'ro',
   isa => 'Str',
   required => 0,
+  lazy => 1,
   default => sub {
     my $self = shift;
-    my $arn = $self->arn || '';
-    return 'Id-' . $arn;
+    my $arn = $self->sqs_arn || '';
+    $arn =~ s/\d//g;
+    $arn =~ s/\-//g;
+    return $arn;
   },
-  documentation => 'The user-defined unique id of the target queue.',
+  documentation => 'The user-defined unique sqs_name of the target queue.',
 );
 
 option prefix => (
@@ -63,8 +66,8 @@ sub run {
   my ($self) = @_;
 
   my $target = CloudCron::TargetQueue->new({
-    Arn => $self->arn,
-    Id  => $self->id,
+    Arn => $self->sqs_arn,
+    Id  => $self->sqs_name,
    });
 
   my $params = CloudCron::AWS::CloudWatch::CustomParams->new(
