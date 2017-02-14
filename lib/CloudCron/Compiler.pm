@@ -89,6 +89,10 @@ sub _description { # name.  human cron schedule
     return $name . " " . $human;
 }
 
+# This method makes possible that crontab files that are valid could be "compiled"
+# to AWS::Events::Rule. There are some restrictions that needs to be taken
+# into account. For more information see the "Limits" section on AWS doc here:
+# http://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions
 sub _patch_days {
     my ($self, $cron) = @_;
     my @parts = split /\s/, $cron;
