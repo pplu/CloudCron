@@ -35,10 +35,10 @@ package CloudCron::AWS::Queue {
     default => sub { CloudCronSQSQueueArgs->new_with_options()  },
   );
 
-  stack_version 1;
+  stack_version 7;
 
   resource CloudCronDeadLetterQueue => 'AWS::SQS::Queue', {
-    MessageRetentionPeriod => 1209600,  # 14 days (it's the maximum value)          
+    MessageRetentionPeriod => 1209600,  # 14 days (it's the maximum value)
   };
 
   resource CloudCronQueue => 'AWS::SQS::Queue', {
@@ -46,9 +46,30 @@ package CloudCron::AWS::Queue {
     RedrivePolicy     => {
       deadLetterTargetArn => GetAtt('CloudCronDeadLetterQueue','Arn'),
       maxReceiveCount     => Ref('maxReceiveCount'),
-    },        
+    },
   };
-     
+
+  resource CWEToSQSPolicy => 'AWS::SQS::QueuePolicy', {
+      PolicyDocument => {
+          Id => "AllowCloudWatchEventsPolicy",
+          Statement => [{
+              Sid => "1",
+              Effect => "Allow",
+              Principal => {
+                  AWS => "*",
+              },
+              Action => "sqs:SendMessage",
+              Resource => GetAtt('CloudCronQueue', 'Arn'),
+              Condition => {
+                  ArnEquals => {
+                      'AWS:SourceArn' => CfString('arn:aws:events:#-#AWS::Region#-#:#-#AWS::AccountId#-#:rule/*'),
+                  }
+              },
+        }]
+      },
+      Queues => [Ref('CloudCronQueue')],
+  };
+
   output 'cloudcronqueue/sqsarn'           => GetAtt('CloudCronQueue', 'Arn');
   output 'cloudcronqueue/sqs'              => Ref('CloudCronQueue');
   output 'cloudcrondeadletterqueue/sqsarn' => GetAtt('CloudCronDeadLetterQueue', 'Arn');
