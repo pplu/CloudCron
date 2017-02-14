@@ -89,16 +89,26 @@ sub _description { # name.  human cron schedule
     return $name . " " . $human;
 }
 
+sub _patch_days {
+    my ($self, $cron) = @_;
+    my @parts = split /\s/, $cron;
+    if (($parts[2] eq '*') && ($parts[4] eq '*')) {
+        $parts[2] = '?';
+    }
+    return (join ' ', @parts) . ' *';
+}
+
 sub _get_properties {
     my $self = shift;
     my $job = shift;
     my $cron = $self->_cron($job);
+    $cron = $self->_patch_days($cron);
     my $name = $self->_name($job);
     my $description = $self->_description($job);
     my $input = $self->_input($job, $self->envs);
     return Cfn::Resource::Properties::AWS::Events::Rule->new({
         Description => $description,
-        ScheduleExpression => "cron(* * ? * * *)", #"cron($cron)",
+        ScheduleExpression => "cron($cron)",
         State => 'ENABLED',
         Targets => [
             {
