@@ -1,2 +1,6 @@
-severity = 5
-verbose = 8
+severity = 5 
+verbose  = [%p](severity %s) %m\nin %f(%l:%c): '%r'\n 
+color = 1 
+
+# hide those policies 
+[-TestingAndDebugging::RequireUseStrict]

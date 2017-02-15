@@ -1,0 +1,7 @@
+# CloudCron tidy configuration
+-i=2
+-ce
+-bt=2
+-pt=2
+-sbt=2
+

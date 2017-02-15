@@ -17,5 +17,11 @@ HELP_FUN = \
 help: ##@other Show this help.
 	@perl -e '$(HELP_FUN)' $(MAKEFILE_LIST)
 
+critique-file: ## critique $file 	
+	carton exec perlcritic --severity=$(severity) ${file}
+
 test-single: ## run test over $testfile
-	carton exec perl -I local -I lib ${testfile}
+	carton exec perl -I local -I lib -I t/lib ${testfile}
+
+tidy: ## run perltidy on $tidyfile
+	carton exec perl -I local -I lib ./local/bin/perltidy ${tidyfile}
