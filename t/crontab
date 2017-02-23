@@ -1,0 +1,80 @@
+PATH=/opt/capside/perl-5.16.3/bin/:usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
+PERL5LIB=/opt/deploy/code/portal/local/lib/perl5/
+HOME=/opt/deploy/code/portal/
+BASH_ENV=/etc/default/portal
+
+## m h  dom mon dow   command
+#
+## Amazon snapshots
+#0  0    *   *   *   /opt/deploy/code/portal/script/aws-snapshots -c /etc/aws-snapshots-daily.conf create >> /var/log/aws-snapshots/aws-snapshots.log 2>&1
+#
+## Amazon snapshot purge
+#0  1    *   *   *   /opt/deploy/code/portal/script/aws-snapshots -c /etc/aws-snapshots-daily.conf purge >> /var/log/aws-snapshots/aws-snapshots.log 2>&1
+#
+## AWS RDS auto-snapshot
+#0  2    *   *   *   BASH_ENV=~/perl5/perlbrew/etc/bashrc bash -c "~/rds-snapshot-backups/run-rds-backups --configfile /home/portal/rds-snapshot-backups/run-rds-backups.conf -l /var/log/rds-snapshot-backups/rds-snapshot-backups.log"
+#0  3    *   *   *   BASH_ENV=~/perl5/perlbrew/etc/bashrc bash -c "~/rds-snapshot-backups/run-rds-backups --configfile /home/portal/rds-snapshot-backups/run-rds-backups.conf --purge -l /var/log/rds-snapshot-backups/rds-snapshot-backups.log"
+
+# Full text search indexes
+1,21,41 * * * * bash -c /opt/deploy/code/portal/script/elastic_index_all_systems
+5,25,45 * * * * bash -c /opt/deploy/code/portal/script/elastic_index_all_wiki
+
+# nightly alerts report
+50   8    *   *   *   bash -c /opt/deploy/code/portal/script/list_warnings_disk && echo 'Usage-Space warnings unhandled' | mutt -a /tmp/warnings_usage_report.csv -s 'Usage-Space warnings unhandled' -- operaciones@capside.com
+0  9    *   *   *   bash -c /opt/deploy/code/portal/script/report-guardia-alerts.pl && echo "Guardia alerts" | mutt -a /tmp/report.csv -s "Guardia alerts" -- operaciones@capside.com
+0  18    *   *   *  bash -c /opt/deploy/code/portal/script/report-daily-alerts.pl && echo "Daily alerts" | mutt -a /tmp/report.csv -s "Daily alerts" -- operaciones@capside.com
+#
+# VulnDB daily import tasks
+25  9   *   *   *   DBIC_UNSAFE_AUTOCOMMIT_OK=1 bash -c /opt/deploy/code/portal/script/vulndb_import.pl 2>&1 | mutt -s 'VulnDB daily imports output/errors' -- oriol.soriano@capside.com"
+
+# VulnDB monthly report to SDM
+0   9   1   *   *   MONTH=$(date -d '-1 month' +\%m); YEAR=$(date +\%Y); bash -c /opt/deploy/code/portal/script/vulnerability_report.pl $MONTH $YEAR
+0 12 1 * * bash -c /opt/deploy/code/portal/script/send_vuln_report.pl
+
+# Session table maintenance
+0 23 * * * bash -c /opt/deploy/code/portal/script/purge_sessions.pl
+
+# Create tickets for recurring tasks
+0 7 * * *  bash -c /opt/deploy/code/portal/script/create_recurring_tasks_tickets.pl 2>&1 | mutt -s 'Portal Recurring Tasks Ticket Creation' -- oriol.soriano@capside.com
+#
+# Check blocked recurring tasks
+10 7 * * 1 bash -c /opt/deploy/code/portal/script/recurringtasks_check_blocked.pl
+#
+# RT Tickets not existing @ Portal daily verification
+0 8 * * *  bash -c /opt/deploy/code/portal/init/report_rt_tickets_without_tmetadata.pl -v 2>&1 | mutt -s 'RT Tickets without ticket_metadata' -- oriol.soriano@capside.com
+
+# DWH hourly ETLs
+15 * * * * bash -c /opt/deploy/code/portal/script/dwh_etl_last_updated_entities.pl -v 2>&1 | mutt -s 'DWH ETL last updated entities' -- oriol.soriano@capside.com
+
+# DWH daily timepool ETL
+30 2 * * * bash -c /opt/deploy/code/portal/script/dwh_daily_timepools_etl.pl -v 2>&1 | mutt -s 'DWH daily timepools ETL' -- oriol.soriano@capside.com
+
+# Timeworked daily report
+40 17,21 * * * bash -c /opt/deploy/code/portal/script/dwh_etl_last_updated_entities.pl; bash -c /opt/deploy/code/portal/script/report_daily_low_timeworked.pl
+0 15 * * * bash -c /opt/deploy/code/portal/script/dwh_etl_last_updated_entities.pl; bash -c /opt/deploy/code/portal/script/report_daily_low_timeworked.pl
+
+## Timeworked 'day after' reminder
+20 9 * * * bash -c /opt/deploy/code/portal/script/reminder_daily_low_timeworked.pl
+#
+# Tplanas daily provision workfacts report
+45 23 * * 1-5 bash -c /opt/deploy/code/portal/script/report_daily_provision_workfacts.pl
+
+## Import CAPSiDE aliases to show in portal.capside.com
+#3-59/10 * * * * /usr/bin/scp -i /home/portal/ialonso/private_key/portal.key portal@n020125.sys.capside.net:/home/portal/output.file /home/portal/ialonso/output.file
+#
+
+# CAPSiDE Ops Team Almighty Ticket Dispatching Tool (tm)
+0,15,30,45 * * * 1-5 bash -c /opt/deploy/code/portal/script/dispatcher_unclassified_tickets
+5 14 * * 1-5 bash -c /opt/deploy/code/portal/script/dispatcher_backup_patching_tickets
+
+# Ops team daily work reports (alias ialonso's mega reports)
+15 0 * * * bash -c /opt/deploy/code/portal/script/timeworked_reports
+
+# Monthly report for exceeded timepools (spruneda)
+5 5 1 * * bash -c /opt/deploy/code/portal/script/report-monthly-exceeded-timepools.pl 2>/dev/null | mutt -s 'Monthly projects timepool report' -- sergi.pruneda@capside.com alba.ferrer@capside.com ventas@capside.com facturacion@capside.com
+
+# Billing import
+0 2 * * * bash -c /opt/deploy/code/portal/script/billing_cron.pl 2>&1 | mutt -s 'Billing script output' -- joseluis.martinez@capside.com
+
+# Billing threshold
+0 8 * * * CPPORTAL_APP_PATH=$HOME bash -c /opt/deploy/code/portal/script/billing_notifications.pl
