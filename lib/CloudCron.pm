@@ -3,8 +3,7 @@ use Moose;
 
 our $VERSION = '0.01';
 
-
-#ABSTRACT: This is for doing neat stuff
+#ABSTRACT: A simple distributed cloud friendly cron for the masses
 
 __PACKAGE__->meta->make_immutable;
 1;
