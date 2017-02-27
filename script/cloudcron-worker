@@ -1,0 +1,29 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+
+use Log::Log4perl;
+use CloudCron::Workers::System;
+
+package CloudCronWorkerArgs {
+  use Moose;
+  with 'MooseX::Getopt';
+
+  has queue_url => (is => 'ro', isa => 'Str', required => 1, documentation => 'The SQS queue URL to poll for messages');
+  has region    => (is => 'ro', isa => 'Str', required => 1, documentation => 'The SQS region identifier');
+  has log_conf  => (is => 'ro', isa => 'Str', required => 1, documentation => 'Path to a Log4perl config file');
+}
+
+my $args = CloudCronWorkerArgs->new_with_options();
+
+Log::Log4perl::init($args->log_conf);
+
+# Instance worker
+my $worker_instance = CloudCron::Workers::System->new(
+  queue_url => $args->queue_url,
+  region    => $args->region,
+  log => Log::Log4perl->get_logger('async'),
+  processor => 'DeleteAlways',
+);
+
+$worker_instance->run();
