@@ -1,0 +1,22 @@
+description "Cloud cron queue consumer"
+author "CAPSiDE development team"
+
+start on runlevel [2345]
+stop on runlevel [!2345]
+
+respawn
+respawn limit 5 60
+
+console log
+
+setuid my_user
+
+env HOME=/home/my_user/
+env QUEUE_URL=https://sqs.eu-west-1.amazonaws.com/123456789012/QueueName
+env QUEUE_REGION=eu-west-1
+
+script
+
+  cloudcron-worker --queue_url $QUEUE_URL --region $QUEUE_REGION --log_conf $HOME/conf/log.conf
+
+end script

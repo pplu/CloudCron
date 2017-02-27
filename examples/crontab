@@ -1,0 +1,6 @@
+PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
+HOME=/home/myhome
+
+*/1 * * * * date >> /tmp/log
+*/2 * * * * echo "Tarea 1" >> /tmp/log
+
