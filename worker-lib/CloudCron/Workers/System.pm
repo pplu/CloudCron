@@ -5,6 +5,7 @@ use CloudCron::TargetInput;
 use Data::Dumper;
 
 our $VERSION = '0.01';
+#ABSTRACT: A simple distributed cloud friendly cron for the masses
 
 with 'SQS::Worker', 'SQS::Worker::DecodeJson';
 
