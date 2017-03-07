@@ -9,7 +9,7 @@ main_module = lib/CloudCron/Workers/System.pm
 
 
 [ExecDir]
-dir = worker-bin
+dir = bin
 
 [GatherDir / BinFiles]
 root = worker-bin
