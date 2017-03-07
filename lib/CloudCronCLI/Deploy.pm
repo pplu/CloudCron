@@ -53,6 +53,8 @@ package CloudCronCLI::Deploy;
     my ($self) = @_;
 
     my $stack = $self->get_stack_from_cfn_by_name($self->destination_queue);
+    my $cron = $self->get_stack_from_cfn_by_name($self->name);
+
     if (not defined $stack) {
       die "Can't find a deployment with name '" . $self->destination_queue . "' in AWS" 
     }
@@ -63,7 +65,7 @@ package CloudCronCLI::Deploy;
       name => $self->name,
       region => $self->region,
       account => '',
-      (defined $stack) ? (update => 1) : (),
+      (defined $cron) ? (update => 1) : (),
     );
     my $cfn = CloudCron::AWS::CloudWatch->new(params => $params);
 
@@ -85,8 +87,6 @@ package CloudCronCLI::Deploy;
       $cfn->addResource($name, $rule->rule);
     }
     
-    my $cron = $self->get_stack_from_cfn_by_name($self->name);
-
     if (not defined $cron) {
       $deployer->deploy;
     } else {
