@@ -1,8 +1,6 @@
 use Test::Spec;
 use strict;
 use CloudCron::Workers::System;
-use CloudCron::TargetInput;
-use CloudCron::Compiler;
 use Data::Dumper;
 use JSON;
 use Test::Output;

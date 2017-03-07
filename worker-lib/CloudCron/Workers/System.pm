@@ -1,7 +1,6 @@
 package CloudCron::Workers::System;
 use Moose;
 use namespace::autoclean;
-use CloudCron::TargetInput;
 use Data::Dumper;
 
 our $VERSION = '0.01';
