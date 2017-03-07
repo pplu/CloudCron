@@ -10,28 +10,18 @@ main_module = lib/CloudCron/Workers/System.pm
 
 [ExecDir]
 dir = worker-bin
-[GatherDir]
-root = worker-lib
-prefix = lib
+
+[GatherDir / BinFiles]
+root = worker-bin
+prefix = bin
 
 [GatherDir / LibFiles]
-root = lib/CloudCron
-prefix = lib/CloudCron
-exclude_match = AWS
-exclude_filename = CronLine.pm
-exclude_filename = TargetQueue.pm
+root = worker-lib
+prefix = lib
 
 [GatherDir / WorkerTest]
 root = t/Workers
 prefix = t
-
-
-[Git::GatherDir]
-exclude_match=Makefile
-exclude_match=lib
-exclude_match=bin
-exclude_match=script
-exclude_match=t
 
 [MakeMaker]
 

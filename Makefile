@@ -25,3 +25,12 @@ test-single: ## run test over $testfile
 
 tidy: ## run perltidy on $tidyfile
 	carton exec perl -I local -I lib ./local/bin/perltidy ${tidyfile}
+
+dists: dist-cloudcron dist-worker ## build all packages
+
+dist-cloudcron: ## build cloudcron
+	cp dist.ini-cloudcron dist.ini
+	dzil build
+dist-worker: ## build worker
+	cp dist.ini-worker dist.ini
+	dzil build

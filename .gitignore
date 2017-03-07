@@ -2,3 +2,4 @@ local/
 cpanfile.snapshot
 vendor/
 t/crontab
+dist.ini
