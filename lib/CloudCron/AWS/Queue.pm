@@ -69,6 +69,7 @@ package CloudCron::AWS::Queue {
       Queues => [Ref('CloudCronQueue')],
   };
 
+  output 'CloudCronQueueVersion' => '1';
   output 'name'     => Ref('AWS::StackName');
   output 'queuearn' => GetAtt('CloudCronQueue', 'Arn');
   output 'queueurl' => Ref('CloudCronQueue');
