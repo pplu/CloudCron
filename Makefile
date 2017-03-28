@@ -33,7 +33,7 @@ dists: dist-cloudcron dist-worker ## build all packages
 
 dist-cloudcron: ## build cloudcron
 	cp dist.ini-cloudcron dist.ini
-	dzil build
+	carton exec dzil build
 dist-worker: ## build worker
 	cp dist.ini-worker dist.ini
-	dzil build
+	carton exec dzil build
