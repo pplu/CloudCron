@@ -48,7 +48,7 @@ How does it work?
 
 CloudCron is basically split into two halves: a "cron compiler", that transforms a cronfile into CloudWatch events
 
-You're crontab file gets transformed into a bunch of CloudWatch Events that get pushed to CloudFormation so they can be managed as a whole
+Your crontab file gets transformed into a bunch of CloudWatch Events that get pushed to CloudFormation so they can be managed as a whole
 
 These CloudWatch events inject a message for each ocurrance of a cron event to an SQS queue, which is getting polled by a worker process. This
 
