@@ -92,7 +92,17 @@ Once you're ready, you can delete queues, and crons with the `cloudcron remove` 
 
 Installation
 ============
-TODO
+Two modules are provided: `CloudCron` and `CloudCron::Worker`.
+
+Only `CloudCron::Worker` is needed in a production environment, so add the following to your cpanfile:
+
+```
+requires 'CloudCron::Worker';
+
+on develop => sub {
+  requires 'CloudCron';
+};
+```
 
 Nitty gritty details
 ====================
