@@ -3,7 +3,7 @@ author = Jose Luis Martinez <joseluis.martinez@capside.com>
 copyright_holder = CAPSiDE
 copyright_year = 2017
 license = None
-main_module = lib/CloudCron/Workers/System.pm
+main_module = lib/CloudCron/Worker.pm
 
 [VersionFromModule]
 
