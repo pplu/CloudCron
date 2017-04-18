@@ -56,6 +56,7 @@ sub execute {
     }
     eval {
         $self->log->debug("about to execute $cmd");
+        $0 = "cloudcron-worker for $cmd";
         if (system($cmd) != 0) {
             my $status = $?;
             if (WIFEXITED($status)){
