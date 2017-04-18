@@ -4,7 +4,7 @@ requires 'CloudDeploy';
 requires 'Moose';
 requires 'JSON';
 requires 'MooseX::Getopt';
-requires 'SQS::Worker';
+requires 'SQS::Worker', '0.05';
 requires 'MooseX::App';
 requires 'Log::Log4perl';
 
