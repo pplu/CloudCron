@@ -23,7 +23,7 @@ my $worker_instance = CloudCron::Workers::System->new(
   queue_url => $args->queue_url,
   region    => $args->region,
   log => Log::Log4perl->get_logger('async'),
-  processor => 'DeleteAlways',
+  processor => 'SQS::Consumers::DeleteAndFork',
 );
 
 $worker_instance->run();

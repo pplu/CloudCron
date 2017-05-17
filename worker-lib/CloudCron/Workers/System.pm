@@ -2,6 +2,7 @@ package CloudCron::Workers::System;
 use Moose;
 use namespace::autoclean;
 use Data::Dumper;
+use POSIX;
 
 our $VERSION = '0.01';
 #ABSTRACT: A simple distributed cloud friendly cron for the masses
@@ -50,15 +51,22 @@ sub execute {
     my ($self, $env_ref, $cmd) = @_;
     my %env = %$env_ref;
     foreach my $var (keys %env) {
-        #$self->log->debug("setting $var -> $env{ $var }");
         $ENV{$var} = $env{$var};
     }
     eval {
         $self->log->debug("about to execute $cmd");
+        $0 = "cloudcron-worker for $cmd";
         if (system($cmd) != 0) {
-            $self->log->error("Error while executing $cmd");
-            my $status = $? >> 8;
-            $self->log->error("Exit status: $status");
+            my $status = $?;
+            if (WIFEXITED($status)){
+              my $exitcode = WEXITSTATUS($status);
+              $self->log->error("Exit status: $exitcode for $cmd");
+            } elsif (WIFSIGNALED($status)) {
+              my $sig = WTERMSIG($status);
+              $self->log->error("Exited by signal: $sig on $cmd");
+            } else {
+              $self->log->error("Uncontrolled exit: $status for $cmd");
+            }
         } else {
             $self->log->info("Command $cmd executed successfully");
         }
