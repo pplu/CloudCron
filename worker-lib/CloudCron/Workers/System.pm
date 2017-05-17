@@ -51,7 +51,6 @@ sub execute {
     my ($self, $env_ref, $cmd) = @_;
     my %env = %$env_ref;
     foreach my $var (keys %env) {
-        #$self->log->debug("setting $var -> $env{ $var }");
         $ENV{$var} = $env{$var};
     }
     eval {
