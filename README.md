@@ -43,6 +43,10 @@ You can deploy a new worker node with new code or patches without downtime
 
 Lambda based solutions have a maximum running time of 5 minutes
 
+- CD Pipeline friendly
+
+You get the opportunity to version control your crontab, and deploy it as a part of your CD
+
 How does it work?
 =================
 
@@ -62,17 +66,16 @@ install dependencies in your system (carton is usually installable via your SOs 
 
 ```
 mkdir mycron
+cd mycron
 echo 'requires "CloudCron";' >> cpanfile
 echo 'requires "CloudCron::Worker";' >> cpanfile
 carton install
-# Enter a shell so we can execute 
 carton exec $SHELL -l
 ```
 
 CloudCron is split in two parts:
  - the management interface package: CloudCron that enables you to create the necessary infrastructure
  - the worker package: CloudCron::Worker the process that runs on your cloud nodes
-
 
 Get me started
 ==============
@@ -115,6 +118,8 @@ Nitty gritty details
    never got acknowledged (deleted) in time (notice that workers immediately delete a message after recieving it, even before attempting to execute
    the job, so not deleting a message should not happen).
 
+ - The worker executes with limited privileges. You control the user which the worker runs with. The worker shouldn't be run as root (unless you have good reasons to)
+
 Known Limitations
 =================
  - The system depends on SQS, so it's possible for
@@ -130,4 +135,104 @@ Known Limitations
  - If you don't have workers polling a queue, events still get delivered to it and accumulate, so it's possible that you accumulate invocations of lots of events if you don't have a worker running.
 
    SQS recently got a deduplication facility which we can use to try to avoid message accumulation
+
+ - If the system that hosts the worker fails before an event has fully executed, the event will not be retried
+
+TOPOLOGIES
+==========
+
+With cloudcron you can generate a lot of differente topologies to suit your needs:
+
+Single crontab
+--------------
+
+```
+crontab ---> Queue <--- Worker node
+```
+
+ - create a queue with cloudcron init
+ - deploy your crontab file with cloudcron deploy
+ - start a cloudcron-worker on the machine that has to do the work
+
+Lots of jobs (multinode)
+------------------------
+
+If one machine is not enough to handle the load of all your crons, you can just 
+add more cloudcron-workers polling the same queue
+
+```
+                                      |---- Worker node 1
+crontab (lots of jobs)  ---> Queue <--|---- Worker node 2
+                                      |---- Worker node 3
+```
+
+ - create a queue with cloudcron init
+ - deploy your crontab file with cloudcron deploy
+ - start one cloudcron-worker for each machine that has to do the work
+
+Lots of jobs (autoscaling)
+--------------------------
+
+If the load on your worker nodes varies enough, you might want to autoscale your
+worker node fleet applying autoscaling to the worker node pool autoscaling group
+
+```
+                                     |-A--   
+crontab (lots of jobs) ---> Queue <--|-S-- Worker node N
+                      |              |-G--
+                      |                |
+                      +--- CloudWatch--+
+```
+
+Caution should be taken: when autoscaling shuts down a worker instance, it will kill the
+processes actually executing. There is no facility in cloudcron to let your jobs finish
+(contributions welcome :))
+
+Manage lots of jobs
+-------------------
+
+You can deploy independant crontab files to the same queue, as long as the worker polling
+the queue is able to execute the commands in your crontab.
+
+```
+crontab for ETLs -----+
+                      |
+crontab for cleanup --+---> Queue <--- Worker node
+                      |
+crontab for X --------+
+```
+
+ - create a queue with cloudcron init
+ - deploy each crontab file with cloudcron deploy to the same queue
+ - start a cloudcron-worker on the machine that has to do the work
+
+Crons running with different users
+----------------------------------
+
+You can deploy an independant worker for each user. The two workers can
+run on the same instance
+
+```
+crontab for user1 ----> Queue1 <---- Worker running with user1
+
+crontab for user2 ----> Queue2 <---- Worker running with user2
+```
+
+ - create two queues with cloudcron init
+ - deploy each crontab to it's queue with cloudcron deploy
+ - start a worker under user1 pointing to the queue that it's cron points to
+ - start the other worker under user2 pointing to the queue that it's cron points to 
+
+Flexibility (custom topologies)
+-------------------------------
+
+You can combine these scearios as you want to adapt them to your needs. 
+Mix, match, and report your topologies back so we can document them!
+
+Deploying cloudcron-worker
+==========================
+
+In the examples directory there is a sample of how to run a cloudcron-worker from an 
+upstart job
+
 
