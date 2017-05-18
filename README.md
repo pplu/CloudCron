@@ -235,4 +235,21 @@ Deploying cloudcron-worker
 In the examples directory there is a sample of how to run a cloudcron-worker from an 
 upstart job
 
+Bugs and Source
+===============
 
+The source code is located here: https://github.com/capside/CloudCron
+
+Bugs and Issues can be reported here: https://github.com/capside/CloudCron/issues
+
+Authors
+=======
+
+Pau Cervera, Eduard Badillo, Jose Luis Martinez
+
+License and Copyright
+=====================
+
+Copyright (c) 2017 by CAPSiDE SL
+
+This code is distributed under the Apache 2 License. The full text of the license can be found in the LICENSE file included with this module.

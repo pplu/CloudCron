@@ -1,0 +1,6 @@
+0.02 2017-05-18
+ - Worker now forks out before running the task
+ - Version not internal anymore
+0.01
+ - First version
+ - CAPSiDE Internal version
