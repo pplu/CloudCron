@@ -2,12 +2,13 @@ name = CloudCron
 author = Jose Luis Martinez <joseluis.martinez@capside.com>
 copyright_holder = CAPSiDE
 copyright_year = 2017
-license = None
+license = Apache_2_0
 main_module = lib/CloudCron.pm
 
 [VersionFromModule]
 
 [Git::GatherDir]
+exclude_match=LICENSE
 exclude_match=Makefile
 exclude_match=worker-lib
 exclude_match=worker-bin
@@ -30,10 +31,12 @@ allow_dirty = README
 [MetaJSON]
 
 [MetaResources]
-repository.web = https://scm.capside.com/
-repository.url = https://scm.capside.com/
+repository.web = https://github.com/capside/CloudCron
+repository.url = https://github.com/capside/CloudCron.git
 repository.type = git
-bugtracker.web = https://scm.capside.com/
+bugtracker.web = https://github.com/capside/CloudCron/issues
+
+[License]
 
 ;[RunExtraTests]
 ;;[TestRelease]
