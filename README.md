@@ -54,25 +54,41 @@ These CloudWatch events inject a message for each ocurrance of a cron event to a
 
 worker process runs in the same machine (or machines) where your old cron could execute it's jobs.
 
+Installation
+============
+
+You can install CloudCron with any perl package manager. We recommend to use carton so you don't 
+install dependencies in your system (carton is usually installable via your SOs package manager):
+
+```
+mkdir mycron
+echo 'requires "CloudCron";' >> cpanfile
+echo 'requires "CloudCron::Worker";' >> cpanfile
+carton install
+# Enter a shell so we can execute 
+carton exec $SHELL -l
+```
+
+CloudCron is split in two parts:
+ - the management interface package: CloudCron that enables you to create the necessary infrastructure
+ - the worker package: CloudCron::Worker the process that runs on your cloud nodes
+
+
 Get me started
 ==============
 ```
 cloudcron init --name MyCronQueue --region eu-west-1
 ```
-This command deploys the SQS queue and informs you how to start a worker. We can have as many queues as we want (for, say, different groups of crons)
-```
-You can start a worker with:
-cloudcron-worker --queue_url https://sqs.eu-west-1.amazonaws.com/012345678901/MyCronQueue-CloudCronQueue-LPNF3N07WF68 --region eu-west-1 --log_conf path_to_log_conf
-```
+This command deploys the SQS queue and informs you how to start a worker. We can have as many queues as we want (for different groups of crons, for example)
 
-First create a log configuration file:
+You can start a worker the output of the last command, but first create a log configuration file:
 ```
 printf "log4perl.appender.Screen = Log::Log4perl::Appender::Screen\nlog4perl.appender.Screen.layout = Log::Log4perl::Layout::PatternLayout\nlog4perl.appender.Screen.layout.ConversionPattern = [%%d][CloudCron] %%p %%m%%n\n# Catch all errors\nlog4perl.logger = INFO, Screen\n" > log.conf
 ```
 
-And now launch the worker pointing to the log config you just created
+And now launch the worker in background, pointing to the log config you just created
 ```
-cloudcron-worker --queue_url https://sqs.eu-west-1.amazonaws.com/012345678901/MyCronQueue-CloudCronQueue-LPNF3N07WF68 --region eu-west-1 --log_conf log.conf
+cloudcron-worker --queue_url https://sqs.eu-west-1.amazonaws.com/012345678901/MyCronQueue-CloudCronQueue-LPNF3N07WF68 --region eu-west-1 --log_conf log.conf &
 ```
 The worker is now idle, waiting for it's first jobs, so we need to create them:
 
@@ -90,20 +106,6 @@ cloudcron deploy --name MyCronFile --destination_queue MyCronQueue --region eu-w
 
 Once you're ready, you can delete queues, and crons with the `cloudcron remove` command
 
-Installation
-============
-Two modules are provided: `CloudCron` and `CloudCron::Worker`.
-
-Only `CloudCron::Worker` is needed in a production environment, so add the following to your cpanfile:
-
-```
-requires 'CloudCron::Worker';
-
-on develop => sub {
-  requires 'CloudCron';
-};
-```
-
 Nitty gritty details
 ====================
  - Each event launched by CloudWatch events is delivered to the crons' queue. The worker picks up the message ***only once***, even if the job
@@ -113,8 +115,19 @@ Nitty gritty details
    never got acknowledged (deleted) in time (notice that workers immediately delete a message after recieving it, even before attempting to execute
    the job, so not deleting a message should not happen).
 
- - The system depends on SQS, so it's possible for an event to be processed more than one time by two concurrent workers
+Known Limitations
+=================
+ - The system depends on SQS, so it's possible for
+   - events to be processed out of order
+   - events to be processed more than one time by two concurrent workers. 
+
+   SQS recently got FIFO and exactly once delivery. It's on the TODO list to take advantage of that capability to provide a more cron-like behaviour
 
  - There is no reentrance contol (like cron, you should take care of that in your job) (or you can contribute a patch to avoid reentrance)
 
- - It's recommended to centralize the cloudcron logs with something like CloudWatch Logs
+ - It's recommended to centralize the cloudcron logs with something like CloudWatch Logs if you're executing on autoscaling groups, for example.
+
+ - If you don't have workers polling a queue, events still get delivered to it and accumulate, so it's possible that you accumulate invocations of lots of events if you don't have a worker running.
+
+   SQS recently got a deduplication facility which we can use to try to avoid message accumulation
+
