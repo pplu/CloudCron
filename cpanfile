@@ -7,6 +7,9 @@ requires 'MooseX::Getopt';
 requires 'SQS::Worker', '0.05';
 requires 'MooseX::App';
 requires 'Log::Log4perl';
+requires 'Path::Class';
+requires 'Paws';
+requires 'namespace::autoclean';
 
 on 'develop' => sub {
   requires 'Test::Spec';
